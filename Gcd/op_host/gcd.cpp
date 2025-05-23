@@ -21,8 +21,10 @@ static ge::graphStatus TilingFunc(gert::TilingContext* context) {
     }
     int dim = std::max(dim1, dim2);
     uint32_t ny[5] = {1, 1, 1, 1, 1};
+    uint32_t total = 1;
     for (int i = 0; i < dim; ++i) {
         ny[i] = std::max(n1[i], n2[i]);
+        total *= ny[i];
     }
     tiling.set_n1(n1);
     tiling.set_n2(n2);
@@ -30,8 +32,13 @@ static ge::graphStatus TilingFunc(gert::TilingContext* context) {
     std::cout << "n1: " << n1[0] << " " << n1[1] << " " << n1[2] << " " << n1[3] << " " << n1[4] << " " << std::endl;
     std::cout << "n2: " << n2[0] << " " << n2[1] << " " << n2[2] << " " << n2[3] << " " << n2[4] << " " << std::endl;
     std::cout << "ny: " << ny[0] << " " << ny[1] << " " << ny[2] << " " << ny[3] << " " << ny[4] << " " << std::endl;
- 
-    context->SetBlockDim(1);
+
+    int cnum = 40;
+    context->SetBlockDim(cnum);
+    int bsize = (total + cnum - 1) / cnum;
+    bsize = (bsize + 31) / 32 * 32;
+    tiling.set_bsize(bsize);
+    std::cout << bsize << std::endl;
     tiling.SaveToBuffer(context->GetRawTilingData()->GetData(), context->GetRawTilingData()->GetCapacity());
     context->GetRawTilingData()->SetDataSize(tiling.GetDataSize());
 

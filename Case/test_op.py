@@ -21,8 +21,8 @@ case_data = {
         'x2':np.random.randint(-100, 100, [9]).astype(np.int16)
     },
     'case5': {
-        'x1':np.random.randint(-1e9, 1e9, [32, 64, 2, 2, 2]).astype(np.int32),
-        'x2':np.random.randint(-1e9, 1e9, [32, 64, 1, 2, 1]).astype(np.int32)
+        'x1':np.random.randint(-1e9, 1e9, [1024, 1024, 2, 2, 2]).astype(np.int32),
+        'x2':np.random.randint(-1e9, 1e9, [1024, 1024, 1, 2, 1]).astype(np.int32)
     }
 }
 
@@ -58,6 +58,12 @@ class TestCustomOP(TestCase):
             print(f"{caseNmae} execution timed out!")
         else:
             output = output.cpu().numpy()
+            print((output != golden).sum())
+            res = (output != golden).reshape(-1)
+            print(res.shape[0])
+            # for i in range(res.shape[0]):
+            #     if res[i] == True:
+            #         print(i, res[i])
             if verify_result(output, golden):
                 print(f"{caseNmae} verify result pass!")
             else:

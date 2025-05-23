@@ -22,10 +22,10 @@ if [ "x$1" == "x1" ]; then
     fi
 fi
 
-# timeout 180  msprof --application="python3 test_op.py $1"
-# python3 get_time.py
+timeout 180  msprof --application="python3 test_op.py $1"
+python3 get_time.py
 
-timeout 180  python3 test_op.py $1
+# timeout 180  python3 test_op.py $1
 if [ $? -eq 124 ]; then
     echo "case${i} execution timed out!"
     exit 1
