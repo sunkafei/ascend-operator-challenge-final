@@ -7,3 +7,5 @@ torch_npu-2.1.0.post10-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.wh
 /**/dist
 /**/custom_ops.egg-info
 /**/extra-info
+Gcd_zip
+Gcd.zip
