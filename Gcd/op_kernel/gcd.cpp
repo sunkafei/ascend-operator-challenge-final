@@ -106,8 +106,8 @@ template<typename T> class GCDKernalFast {
             }
         }
         __aicore__ inline void Compute(int32_t pos) {
-            LocalTensor<T> a = Q_x1.DeQue<T>();
-            LocalTensor<T> b = Q_x2.DeQue<T>();
+            LocalTensor<T> x1 = Q_x1.DeQue<T>();
+            LocalTensor<T> x2 = Q_x2.DeQue<T>();
             LocalTensor<T> y = Q_y.AllocTensor<T>();
             for (int i = 0; i < tile_length; ++i) {
                 T a = x1.GetValue(i);
