@@ -58,9 +58,59 @@ private:
     GlobalTensor<T> x1Gm, x2Gm, yGm;
     uint32_t n1[5], n2[5], ny[5];
 };
+template<typename T> class GCDKernalFast {
+    public:
+        __aicore__ inline GCDKernalFast() {}
+        __aicore__ inline void Init(GM_ADDR x1, GM_ADDR x2, GM_ADDR y, uint32_t size, uint32_t length) {
+            ASSERT(GetBlockNum() != 0 && "block dim can not be zero!");
+            const unsigned num_cores = GetBlockNum();
+            unsigned L = GetBlockIdx() * length;
+            unsigned R = (GetBlockIdx() + 1) * length;
+            if (R > size) {
+                R = size;
+            }
+            this->L = L;
+            this->R = R;
+            x1Gm.SetGlobalBuffer((__gm__ T*)x1, length + num_cores);
+            x2Gm.SetGlobalBuffer((__gm__ T*)x2, length + num_cores);
+            yGm.SetGlobalBuffer((__gm__ T*)y, length + num_cores);
+        }
+        __aicore__ inline void Process() {
+            for (int i = L; i < R; ++i) {
+                int64_t a = x1Gm.GetValue(i);
+                int64_t b = x2Gm.GetValue(i);
+                if (a < 0) {
+                    a = -a;
+                }
+                if (b < 0) {
+                    b = -b;
+                }
+                while (b) {
+                    int64_t A = b;
+                    int64_t B = a % b;
+                    a = A;
+                    b = B;
+                }
+                yGm.SetValue(i, a);
+            }
+            //AscendC::DataCacheCleanAndInvalid<T, AscendC::CacheLine::ENTIRE_DATA_CACHE, AscendC::DcciDst::CACHELINE_OUT>(yGm);
+            //DataCacheCleanAndInvalid<T, CacheLine::ENTIRE_DATA_CACHE>(yGm);
+        }
+    
+    private:
+        GlobalTensor<T> x1Gm, x2Gm, yGm;
+        uint32_t L, R;
+};
 extern "C" __global__ __aicore__ void gcd(GM_ADDR x1, GM_ADDR x2, GM_ADDR y, GM_ADDR workspace, GM_ADDR tiling) {
     GET_TILING_DATA(tiling_data, tiling);
-    BruteForce<DTYPE_X1> op;
-    op.Init(x1, x2, y, tiling_data.n1, tiling_data.n2, tiling_data.ny);
-    op.Process();
+    if (tiling_data.status == 0) {
+        BruteForce<DTYPE_X1> op;
+        op.Init(x1, x2, y, tiling_data.n1, tiling_data.n2, tiling_data.ny);
+        op.Process();
+    }
+    else {
+        GCDKernalFast<DTYPE_X1> op;
+        op.Init(x1, x2, y, tiling_data.size, tiling_data.length);
+        op.Process();
+    }
 }
