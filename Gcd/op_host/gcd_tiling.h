@@ -3,8 +3,9 @@
 
 namespace optiling {
 BEGIN_TILING_DATA_DEF(GcdTilingData)
-  TILING_DATA_FIELD_DEF(uint32_t, n1);
-  TILING_DATA_FIELD_DEF(uint32_t, n2);
+  TILING_DATA_FIELD_DEF_ARR(uint32_t, 5, n1);
+  TILING_DATA_FIELD_DEF_ARR(uint32_t, 5, n2);
+  TILING_DATA_FIELD_DEF_ARR(uint32_t, 5, ny);
 END_TILING_DATA_DEF;
 
 REGISTER_TILING_DATA_CLASS(Gcd, GcdTilingData)

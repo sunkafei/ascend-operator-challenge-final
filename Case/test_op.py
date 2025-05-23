@@ -11,6 +11,10 @@ case_data = {
     'case1': {
         'x1':np.random.randint(-100, 100, [32]).astype(np.int16),
         'x2':np.random.randint(-100, 100, [32]).astype(np.int16)
+    },
+    'case2': {
+        'x1':np.random.randint(-100, 100, [32]).astype(np.int16),
+        'x2':np.random.randint(-100, 100, [1]).astype(np.int16)
     }
 }
 
