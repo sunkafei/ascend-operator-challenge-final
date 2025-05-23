@@ -95,7 +95,7 @@ template<typename T> class GCDKernalFast {
                     a >>= ScalarGetSFFValue<1>(a);
                     do {
                         b >>= ScalarGetSFFValue<1>(b);
-                        if((a | b) <= 64){
+                        if(a <= 64 && b <= 64){
                             a = 64 - ScalarCountLeadingZero(pre[a] & pre[b]);
                             break;
                         }
