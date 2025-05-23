@@ -1,0 +1,40 @@
+[
+    {
+        "op": "Gcd",
+        "language": "cpp",
+        "input_desc": [
+            {
+                "name": "x1",
+                "param_type": "required",
+                "format": [
+                    "ND", "ND", "ND"
+                ],
+                "type": [
+                    "int16", "int32", "int64"
+                ]
+            },
+            {
+                "name": "x2",
+                "param_type": "required",
+                "format": [
+                    "ND", "ND", "ND"
+                ],
+                "type": [
+                    "int16", "int32", "int64"
+                ]
+            }
+        ],
+        "output_desc": [
+            {
+                "name": "y",
+                "param_type": "required",
+                "format": [
+                    "ND", "ND", "ND"
+                ],
+                "type": [
+                    "int16", "int32", "int64"
+                ]
+            }
+        ]
+    }
+]
