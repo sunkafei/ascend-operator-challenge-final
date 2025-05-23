@@ -77,21 +77,15 @@ template<typename T> class GCDKernalFast {
         }
         __aicore__ inline void Process() {
             for (int i = L; i < R; ++i) {
-                int64_t a = x1Gm.GetValue(i);
-                int64_t b = x2Gm.GetValue(i);
-                if (a < 0) {
-                    a = -a;
-                }
-                if (b < 0) {
-                    b = -b;
-                }
+                T a = x1Gm.GetValue(i);
+                T b = x2Gm.GetValue(i);
                 while (b) {
-                    int64_t A = b;
-                    int64_t B = a % b;
+                    T A = b;
+                    T B = a % b;
                     a = A;
                     b = B;
                 }
-                yGm.SetValue(i, a);
+                yGm.SetValue(i, a > 0 ? a : -a);
             }
             //AscendC::DataCacheCleanAndInvalid<T, AscendC::CacheLine::ENTIRE_DATA_CACHE, AscendC::DcciDst::CACHELINE_OUT>(yGm);
             //DataCacheCleanAndInvalid<T, CacheLine::ENTIRE_DATA_CACHE>(yGm);
