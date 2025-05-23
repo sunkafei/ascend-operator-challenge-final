@@ -79,15 +79,26 @@ template<typename T> class GCDKernalFast {
             for (int i = L; i < R; ++i) {
                 T a = x1Gm.GetValue(i);
                 T b = x2Gm.GetValue(i);
-                while (b) {
-                    // T A = b;
-                    // T B = a % b;
-                    // a = A;
-                    // b = B;
-                    a = a % b;
-                    a ^= b ^= a ^= b;
+                a = (a > 0 ? a : -a);
+                b = (b > 0 ? b : -b);
+                if (a == 0){
+                    yGm.SetValue(i, b);
                 }
-                yGm.SetValue(i, a > 0 ? a : -a);
+                else if (b == 0) {
+                    yGm.SetValue(i, a);
+                }
+                else {
+                    T shift = ScalarGetSFFValue<1>(a | b);
+                    a >>= ScalarGetSFFValue<1>(a);
+                    do {
+                        b >>= ScalarGetSFFValue<1>(b);
+                        if (a > b) {
+                            a ^= b ^= a ^= b;
+                        }
+                        b -= a;
+                    } while (b);
+                    yGm.SetValue(i, a << shift);
+                }
             }
             //AscendC::DataCacheCleanAndInvalid<T, AscendC::CacheLine::ENTIRE_DATA_CACHE, AscendC::DcciDst::CACHELINE_OUT>(yGm);
             //DataCacheCleanAndInvalid<T, CacheLine::ENTIRE_DATA_CACHE>(yGm);
