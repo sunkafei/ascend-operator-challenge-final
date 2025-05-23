@@ -54,6 +54,7 @@ static ge::graphStatus TilingFunc(gert::TilingContext* context) {
             status = 0;
         }
     }
+    if(size <= num_cores * alignment) status = 0;
     tiling.set_status(status);
     tiling.set_size(size);
     unsigned length = (size - 1) / num_cores + 1;
@@ -64,7 +65,7 @@ static ge::graphStatus TilingFunc(gert::TilingContext* context) {
     }
     else {
         std::cout << "Multicore" << std::endl;
-        context->SetBlockDim(40);
+        context->SetBlockDim(num_cores);
     }
     tiling.SaveToBuffer(context->GetRawTilingData()->GetData(), context->GetRawTilingData()->GetCapacity());
     context->GetRawTilingData()->SetDataSize(tiling.GetDataSize());

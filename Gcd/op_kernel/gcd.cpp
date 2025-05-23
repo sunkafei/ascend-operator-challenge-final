@@ -69,11 +69,11 @@ template<typename T> class GCDKernalFast {
             if (R > size) {
                 R = size;
             }
-            this->L = L;
-            this->R = R;
-            x1Gm.SetGlobalBuffer((__gm__ T*)x1, length + num_cores);
-            x2Gm.SetGlobalBuffer((__gm__ T*)x2, length + num_cores);
-            yGm.SetGlobalBuffer((__gm__ T*)y, length + num_cores);
+            this->L = 0;
+            this->R = R - L;
+            x1Gm.SetGlobalBuffer((__gm__ T*)x1 + L, length);
+            x2Gm.SetGlobalBuffer((__gm__ T*)x2 + L, length);
+            yGm.SetGlobalBuffer((__gm__ T*)y + L, length);
         }
         __aicore__ inline void Process() {
             for (int i = L; i < R; ++i) {
