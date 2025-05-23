@@ -1,5 +1,8 @@
 #include "kernel_operator.h"
 using namespace AscendC;
+
+constexpr uint64_t pre[65] = {0, 1ll,3ll,5ll,11ll,17ll,39ll,65ll,139ll,261ll,531ll,1025ll,2095ll,4097ll,8259ll,16405ll,32907ll,65537ll,131367ll,262145ll,524827ll,1048645ll,2098179ll,4194305ll,8390831ll,16777233ll,33558531ll,67109125ll,134225995ll,268435457ll,536887863ll,1073741825ll,2147516555ll,4294968325ll,8590000131ll,17179869265ll,34359871791ll,68719476737ll,137439215619ll,274877911045ll,549756338843ll,1099511627777ll,2199024312423ll,4398046511105ll,8796095120395ll,17592186061077ll,35184376283139ll,70368744177665ll,140737496778927ll,281474976710721ll,562949970199059ll,1125899906908165ll,2251799847243787ll,4503599627370497ll,9007199321981223ll,18014398509483025ll,36028797153190091ll,72057594038190085ll,144115188344291331ll,288230376151711745ll,576460752840837695ll,1152921504606846977ll,2305843010287435779ll,4611686018428436805ll,9223372039002292363};
+
 template<typename T> class BruteForce {
 public:
     __aicore__ inline BruteForce() {}
@@ -92,6 +95,10 @@ template<typename T> class GCDKernalFast {
                     a >>= ScalarGetSFFValue<1>(a);
                     do {
                         b >>= ScalarGetSFFValue<1>(b);
+                        if(a <= 64 && b <= 64){
+                            a = 64 - ScalarCountLeadingZero(pre[a] & pre[b]);
+                            break;
+                        }
                         if (a > b) {
                             a ^= b ^= a ^= b;
                         }
