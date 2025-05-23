@@ -80,10 +80,12 @@ template<typename T> class GCDKernalFast {
                 T a = x1Gm.GetValue(i);
                 T b = x2Gm.GetValue(i);
                 while (b) {
-                    T A = b;
-                    T B = a % b;
-                    a = A;
-                    b = B;
+                    // T A = b;
+                    // T B = a % b;
+                    // a = A;
+                    // b = B;
+                    a = a % b;
+                    a ^= b ^= a ^= b;
                 }
                 yGm.SetValue(i, a > 0 ? a : -a);
             }
