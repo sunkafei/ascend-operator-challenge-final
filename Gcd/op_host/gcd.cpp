@@ -1,23 +1,29 @@
 
 #include "gcd_tiling.h"
 #include "register/op_def_registry.h"
-
+#include <iostream>
 
 namespace optiling {
-static ge::graphStatus TilingFunc(gert::TilingContext* context)
-{
+static ge::graphStatus TilingFunc(gert::TilingContext* context) {
+    GcdTilingData tiling;
+    const gert::StorageShape* x1_shape = context->GetInputShape(0);
+    int32_t n1 = 1;
+    for (int i = 0; i < x1_shape->GetStorageShape().GetDimNum(); i++)
+        n1 *= x1_shape->GetStorageShape().GetDim(i);
+    const gert::StorageShape* x2_shape = context->GetInputShape(1);
+    int32_t n2 = 1;
+    for (int i = 0; i < x2_shape->GetStorageShape().GetDimNum(); i++)
+        n2 *= x2_shape->GetStorageShape().GetDim(i);
+    tiling.set_n1(n1);
+    tiling.set_n2(n2);
+    std::cout << "n1: " << n1 << std::endl;
+    std::cout << "n2: " << n2 << std::endl;
 
-  GcdTilingData tiling;
-  const gert::StorageShape* x1_shape = context->GetInputShape(0);
-  int32_t data_sz = 1;
-  for (int i = 0; i < x1_shape->GetStorageShape().GetDimNum(); i++)
-    data_sz *= x1_shape->GetStorageShape().GetDim(i);
-  tiling.set_size(data_sz);
-  context->SetBlockDim(8);
-  tiling.SaveToBuffer(context->GetRawTilingData()->GetData(), context->GetRawTilingData()->GetCapacity());
-  context->GetRawTilingData()->SetDataSize(tiling.GetDataSize());
+    context->SetBlockDim(1);
+    tiling.SaveToBuffer(context->GetRawTilingData()->GetData(), context->GetRawTilingData()->GetCapacity());
+    context->GetRawTilingData()->SetDataSize(tiling.GetDataSize());
 
-  return ge::GRAPH_SUCCESS;
+    return ge::GRAPH_SUCCESS;
 }
 }
 

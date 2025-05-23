@@ -3,3 +3,6 @@
 /**/build
 /**/input
 /**/output
+torch_npu-2.1.0.post10-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl
+/**/dist
+/**/custom_ops.egg-info
