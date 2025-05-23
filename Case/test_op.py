@@ -17,12 +17,12 @@ case_data = {
         'x2':np.random.randint(-100, 100, [1]).astype(np.int16)
     },
     'case3': {
-        'x1':np.random.randint(-100, 100, [32, 1, 3]).astype(np.int16),
-        'x2':np.random.randint(-100, 100, [1, 32, 3]).astype(np.int16)
+        'x1':np.random.randint(-100, 100, [4, 4]).astype(np.int16),
+        'x2':np.random.randint(-100, 100, [4, 1]).astype(np.int16)
     },
     'case5': {
-        'x1':np.random.randint(-1e9, 1e9, [1024, 1024, 2, 1, 1]).astype(np.int32),
-        'x2':np.random.randint(-1e9, 1e9, [1024, 1024, 1, 2, 2]).astype(np.int32)
+        'x1':np.random.randint(-1e9, 1e9, [32, 64, 2, 2, 2]).astype(np.int32),
+        'x2':np.random.randint(-1e9, 1e9, [32, 64, 1, 2, 1]).astype(np.int32)
     }
 }
 

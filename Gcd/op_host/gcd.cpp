@@ -29,6 +29,7 @@ static ge::graphStatus TilingFunc(gert::TilingContext* context) {
     std::cout << "n1: " << n1[0] << " " << n1[1] << " " << n1[2] << " " << n1[3] << " " << n1[4] << " " << std::endl;
     std::cout << "n2: " << n2[0] << " " << n2[1] << " " << n2[2] << " " << n2[3] << " " << n2[4] << " " << std::endl;
     std::cout << "ny: " << ny[0] << " " << ny[1] << " " << ny[2] << " " << ny[3] << " " << ny[4] << " " << std::endl;
+ 
     context->SetBlockDim(1);
     tiling.SaveToBuffer(context->GetRawTilingData()->GetData(), context->GetRawTilingData()->GetCapacity());
     context->GetRawTilingData()->SetDataSize(tiling.GetDataSize());

@@ -25,12 +25,12 @@ public:
                 for (uint32_t i2 = 0; i2 < ny[2]; ++i2) {
                     for (uint32_t i3 = 0; i3 < ny[3]; ++i3) {
                         for (uint32_t i4 = 0; i4 < ny[4]; ++i4) {
-                            uint32_t indices[6] = {1, i0, i1, i2, i3, i4};
+                            uint32_t indices[5] = {i0, i1, i2, i3, i4};
                             uint32_t idx1 = 0, idx2 = 0, idxy = 0;
-                            for (int j = 1; j <= 5; ++j) {
-                                idx1 = idx1 * n1[j - 1] + indices[j] % n1[j - 1];
-                                idx2 = idx2 * n2[j - 1] + indices[j] % n2[j - 1];
-                                idxy = idxy * ny[j - 1] + indices[j];
+                            for (int j = 0; j < 5; ++j) {
+                                idx1 = idx1 * n1[j] + indices[j] % n1[j];
+                                idx2 = idx2 * n2[j] + indices[j] % n2[j];
+                                idxy = idxy * ny[j] + indices[j];
                             }
                             int64_t a = x1Gm.GetValue(idx1);
                             int64_t b = x2Gm.GetValue(idx2);
