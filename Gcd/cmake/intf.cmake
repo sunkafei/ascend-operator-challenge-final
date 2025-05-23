@@ -15,7 +15,9 @@ target_compile_definitions(intf_pub INTERFACE
     _GLIBCXX_USE_CXX11_ABI=0
     $<$<CONFIG:Release>:_FORTIFY_SOURCE=2>
 )
-target_include_directories(intf_pub INTERFACE ${ASCEND_CANN_PACKAGE_PATH}/include)
+target_include_directories(intf_pub INTERFACE ${ASCEND_CANN_PACKAGE_PATH}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/op_kernel
+)
 target_link_options(intf_pub INTERFACE
     $<$<STREQUAL:$<TARGET_PROPERTY:TYPE>,EXECUTABLE>:-pie>
     $<$<CONFIG:Release>:-s>

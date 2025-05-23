@@ -1,3 +1,7 @@
+#!/bin/bash
+# Copyright (c) Huawei Technologies Co., Ltd. 2023-2024. All rights reserved.
+
+
 ascend_install_dir=$1
 gen_file_dir=$2
 

@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
 # Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,7 +28,7 @@ ATTR_TYPE_LIST = ["int", "float", "bool", "str", "listInt", "listFloat", "listBo
                   "type", "listType", "tensor", "listTensor"]
 ATTR_PARAMTYPE_LIST = ["optional", "required"]
 BOOL_FLAG_KEY = ["dynamicFormat", "dynamicShapeSupport", "dynamicRankSupport", "precision_reduce", "heavyOp",
-                 "needCheckSupport"]
+                 "needCheckSupport", "enableVectorCore"]
 BOOL_LIST = ["true", "false"]
 DTYPE_LIST = ["float16", "float", "float32", "int8", "int16", "int32", "uint8", "uint16", "uint32", "bool",
               "int64", "uint64", "qint8", "qint16", "qint32", "quint8", "quint16", "double", "complex64",
@@ -292,7 +294,7 @@ def write_json_file(tbe_ops_info, json_file_path):
     wr_flag = os.O_WRONLY | os.O_CREAT
     wr_mode = stat.S_IWUSR | stat.S_IRUSR
     with os.fdopen(os.open(json_file_real_path, wr_flag, wr_mode), 'w') as file_path:
-        # The owner have all rights，group only have read rights
+        # The owner have all rights£¬group only have read rights
         os.chmod(json_file_real_path, stat.S_IWUSR + stat.S_IRGRP
                  + stat.S_IRUSR)
         json.dump(tbe_ops_info, file_path, sort_keys=True, indent=4,
@@ -322,6 +324,7 @@ if __name__ == '__main__':
 
     OUTPUT_FILE_PATH = "tbe_ops_info.json"
     ini_file_path_list = []
+    parse_ini_list = []
 
     for arg in args:
         if arg.endswith("ini"):
@@ -330,9 +333,14 @@ if __name__ == '__main__':
         if arg.endswith("json"):
             OUTPUT_FILE_PATH = arg
 
-    if len(ini_file_path_list) == 0:
+    if not ini_file_path_list:
         ini_file_path_list.append("tbe_ops_info.ini")
 
-    if not parse_ini_to_json(ini_file_path_list, OUTPUT_FILE_PATH):
-        sys.exit(1)
-    sys.exit(0)
+    for ini_file in ini_file_path_list:
+        if os.path.exists(ini_file):
+            parse_ini_list.append(ini_file)
+
+    if parse_ini_list:
+        if not parse_ini_to_json(parse_ini_list, OUTPUT_FILE_PATH):
+            sys.exit(1)
+        sys.exit(0)

@@ -1,4 +1,6 @@
 #!/bin/bash
+# Copyright (c) Huawei Technologies Co., Ltd. 2023-2024. All rights reserved.
+
 vendor_name=customize
 targetdir=/usr/local/Ascend/opp
 target_custom=0
@@ -31,7 +33,7 @@ done
 
 log() {
     cur_date=`date +"%Y-%m-%d %H:%M:%S"`
-    echo "[runtime] [$cur_date] "$1
+    echo "[ops_custom] [$cur_date] "$1
 }
 
 if [ -n "${INSTALL_PATH}" ]; then
@@ -66,6 +68,13 @@ fi
 if [ ! -d $targetdir ];then
     log "[ERROR] $targetdir no exist"
     exit 1
+fi
+
+if [ ! -x $targetdir ] || [ ! -w $targetdir ] || [ ! -r $targetdir ];then
+    log "[WARNING] The directory $targetdir does not have sufficient permissions. \
+    Please check and modify the folder permissions (e.g., using chmod), \
+    or use the --install-path option to specify an installation path and \
+    change the environment variable ASCEND_CUSTOM_OPP_PATH to the specified path."
 fi
 
 upgrade()
@@ -114,7 +123,7 @@ upgrade()
                         [ -n "${targetdir}/$vendordir/$1/" ] && rm -rf "${targetdir}/$vendordir/$1"/*
                         break;
                     else
-                        echo "[ERROR] input error, please input again!"
+                        log "[ERROR] input error, please input again!"
                     fi
                 done
             fi
@@ -162,7 +171,7 @@ upgrade_proto()
                     elif [ "$yn" = y ]; then
                         break;
                     else
-                        echo "[ERROR] input error, please input again!"
+                        log "[ERROR] input error, please input again!"
                     fi
                 done
             fi
@@ -217,38 +226,38 @@ if [ ! -d ${targetdir}/vendors ];then
         mkdir -p ${targetdir}/vendors
         if [ $? -ne 0 ];then
             log "[ERROR] create ${targetdir}/vendors failed"
-            return 1
+            exit 1
         fi
 fi
 chmod u+w ${targetdir}/vendors
 
-echo "[ops_custom]upgrade framework"
+log "[INFO] upgrade framework"
 upgrade framework
 if [ $? -ne 0 ];then
     exit 1
 fi
 
-echo "[ops_custom]upgrade op proto"
+log "[INFO] upgrade op proto"
 upgrade op_proto
 if [ $? -ne 0 ];then
     exit 1
 fi
 
-echo "[ops_custom]upgrade version.info"
-upgrade_file version.info
-if [ $? -ne 0 ];then
-    exit 1
-fi
-
-echo "[ops_custom]upgrade op impl"
+log "[INFO] upgrade op impl"
 delete_optiling_file op_impl
 upgrade op_impl
 if [ $? -ne 0 ];then
     exit 1
 fi
 
-echo "[ops_custom]upgrade op api"
+log "[INFO] upgrade op api"
 upgrade op_api
+if [ $? -ne 0 ];then
+    exit 1
+fi
+
+log "[INFO] upgrade version.info"
+upgrade_file version.info
 if [ $? -ne 0 ];then
     exit 1
 fi
@@ -262,7 +271,7 @@ fi
 if [ -n "${INSTALL_PATH}" ] && [ -d ${INSTALL_PATH} ]; then
     _ASCEND_CUSTOM_OPP_PATH=${targetdir}/${vendordir}
     bin_path="${_ASCEND_CUSTOM_OPP_PATH}/bin"
-    set_env_variable="#!/bin/bash\nexport ASCEND_CUSTOM_OPP_PATH=${_ASCEND_CUSTOM_OPP_PATH}:\${ASCEND_CUSTOM_OPP_PATH}"
+    set_env_variable="#!/bin/bash\nexport ASCEND_CUSTOM_OPP_PATH=${_ASCEND_CUSTOM_OPP_PATH}:\${ASCEND_CUSTOM_OPP_PATH}\nexport LD_LIBRARY_PATH=${_ASCEND_CUSTOM_OPP_PATH}/op_api/lib/:\${LD_LIBRARY_PATH}"
     if [ ! -d ${bin_path} ]; then
         mkdir -p ${bin_path} >> /dev/null 2>&1
         if [ $? -ne 0 ]; then
@@ -279,40 +288,31 @@ if [ -n "${INSTALL_PATH}" ] && [ -d ${INSTALL_PATH} ]; then
         execute the command [ source ${bin_path}/set_env.bash ] to set the environment path"
     fi
 else
+    _ASCEND_CUSTOM_OPP_PATH=${targetdir}/${vendordir}
     config_file=${targetdir}/vendors/config.ini
     if [ ! -f ${config_file} ]; then
         touch ${config_file}
         chmod 640 ${config_file}
         echo "load_priority=$vendor_name" > ${config_file}
         if [ $? -ne 0 ];then
-            echo "echo load_priority failed"
+            log "[ERROR] echo load_priority failed"
             exit 1
         fi
     else
         found_vendors="$(grep -w "load_priority" "$config_file" | cut --only-delimited -d"=" -f2-)"
-        found_vendor=$(echo $found_vendors | sed "s/$vendor_name//g" | tr ',' ' ')
+        found_vendor=$(echo $found_vendors | sed "s/\<$vendor_name\>//g" | tr ',' ' ')
         vendor=$(echo $found_vendor | tr -s ' ' ',')
         if [ "$vendor" != "" ]; then
             sed -i "/load_priority=$found_vendors/s@load_priority=$found_vendors@load_priority=$vendor_name,$vendor@g" "$config_file"
         fi
     fi
+    log "[INFO] using requirements: when custom module install finished or before you run the custom module, \
+        execute the command [ export LD_LIBRARY_PATH=${_ASCEND_CUSTOM_OPP_PATH}/op_api/lib/:\${LD_LIBRARY_PATH} ] to set the environment path"
 fi
-
-chmod u-w ${targetdir}/vendors
 
 if [ -d ${targetdir}/$vendordir/op_impl/cpu/aicpu_kernel/impl/ ]; then
     chmod -R 440 ${targetdir}/$vendordir/op_impl/cpu/aicpu_kernel/impl/* >/dev/null 2>&1
 fi
-if [ -f ${targetdir}/ascend_install.info ]; then
-    chmod -R 440 ${targetdir}/ascend_install.info
-fi
-if [ -f ${targetdir}/scene.info ]; then
-    chmod -R 440 ${targetdir}/scene.info
-fi
-if [ -f ${targetdir}/version.info ]; then
-    chmod -R 440 ${targetdir}/version.info
-fi
 
 echo "SUCCESS"
 exit 0
-

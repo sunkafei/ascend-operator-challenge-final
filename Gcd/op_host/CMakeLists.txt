@@ -5,7 +5,13 @@ opbuild(OPS_SRC ${ops_srcs}
         OUT_DIR ${ASCEND_AUTOGEN_PATH}
 )
 
-add_library(cust_op_proto SHARED ${ops_srcs} ${ASCEND_AUTOGEN_PATH}/op_proto.cc)
+file(GLOB group_proto_src ${ASCEND_AUTOGEN_PATH}/group_proto/*.cc)
+ 
+add_library(cust_op_proto SHARED
+    $<$<TARGET_EXISTS:group_proto_src>:${group_proto_src}>
+    ${ops_srcs}
+    ${ASCEND_AUTOGEN_PATH}/op_proto.cc
+)
 target_compile_definitions(cust_op_proto PRIVATE OP_PROTO_LIB)
 target_compile_options(cust_op_proto PRIVATE
         -fvisibility=hidden
@@ -72,6 +78,11 @@ install(TARGETS cust_op_proto
         LIBRARY DESTINATION packages/vendors/${vendor_name}/op_proto/lib/linux/${CMAKE_SYSTEM_PROCESSOR})
 install(FILES ${ASCEND_AUTOGEN_PATH}/op_proto.h
         DESTINATION packages/vendors/${vendor_name}/op_proto/inc)
+file(GLOB GROUP_PROTO_HEADERS ${ASCEND_AUTOGEN_PATH}/group_proto/*.h)
+if (GROUP_PROTO_HEADERS)
+        install(FILES ${GROUP_PROTO_HEADERS}
+                DESTINATION packages/vendors/${vendor_name}/op_proto/inc)
+endif()
 install(TARGETS cust_optiling
         LIBRARY DESTINATION packages/vendors/${vendor_name}/op_impl/ai_core/tbe/op_tiling/lib/linux/${CMAKE_SYSTEM_PROCESSOR})
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/liboptiling.so

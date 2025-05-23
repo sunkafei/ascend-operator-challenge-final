@@ -1,12 +1,3 @@
-
-set(tikreplaylib_DIR ${ASCEND_TENSOR_COMPILER_PATH}/tikcpp/tikreplaylib/lib/cmake)
-find_package(tikreplaylib REQUIRED)
-message(STATUS "PACKAGE tikreplaylib FOUND")
-
-# replay config
-set(BATCH_MODE_REPLAY_LIST )
-set(ITERATOR_MODE_REPLAY_LIST )
-
 # set custom compile options
 if ("${CMAKE_BUILD_TYPE}x" STREQUAL "Debugx")
     add_ops_compile_options(ALL OPTIONS -g -O0)
@@ -25,8 +16,6 @@ foreach(compute_unit ${ASCEND_COMPUTE_UNIT})
     if (NOT TARGET ascendc_impl_gen)
         add_ops_impl_target(TARGET ascendc_impl_gen
             OPS_INFO ${ASCEND_AUTOGEN_PATH}/aic-${compute_unit}-ops-info.ini
-            OPS_BATCH ${BATCH_MODE_REPLAY_LIST}
-            OPS_ITERATE ${ITERATOR_MODE_REPLAY_LIST}
             IMPL_DIR ${CMAKE_CURRENT_SOURCE_DIR}
             OUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/tbe
             INSTALL_DIR packages/vendors/${vendor_name}/op_impl/ai_core/tbe/${vendor_name}_impl
@@ -34,7 +23,7 @@ foreach(compute_unit ${ASCEND_COMPUTE_UNIT})
     endif()
 
     # dynamic shape binary compile
-    if (${ENABLE_BINARY_PACKAGE})
+    if (${ENABLE_BINARY_PACKAGE} AND NOT ${ENABLE_CROSS_COMPILE})
         add_bin_compile_target(TARGET ascendc_bin_${compute_unit}
             OPS_INFO ${ASCEND_AUTOGEN_PATH}/aic-${compute_unit}-ops-info.ini
             IMPL_DIR ${CMAKE_CURRENT_SOURCE_DIR}
@@ -46,15 +35,13 @@ foreach(compute_unit ${ASCEND_COMPUTE_UNIT})
         add_dependencies(ascendc_bin_${compute_unit} ascendc_impl_gen)
     endif()
 
-    # generate replay <op>_impl.cpp, <op>_replay.cpp and <op>_entry.cce
-    add_ops_replay_targets(OPS_BATCH ${BATCH_MODE_REPLAY_LIST}
-        OPS_ITERATE ${ITERATOR_MODE_REPLAY_LIST}
-        OPS_INFO ${ASCEND_AUTOGEN_PATH}/aic-${compute_unit}-ops-info.ini
-        IMPL_DIR ${CMAKE_CURRENT_SOURCE_DIR}
-        OUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/tbe/replay/${compute_unit}
-        INSTALL_DIR packages/vendors/${vendor_name}/op_impl/ai_core/tbe/op_replay
-        COMPUTE_UNIT ${compute_unit}
-    )
+    if (${ENABLE_CROSS_COMPILE} AND ${ENABLE_BINARY_PACKAGE})
+        add_cross_compile_target(
+            TARGET bin_${compute_unit}
+            OUT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../kernel
+            INSTALL_DIR packages/vendors/${vendor_name}/op_impl/ai_core/tbe/
+        )
+    endif()
 endforeach()
 
 # generate npu_supported_ops.json

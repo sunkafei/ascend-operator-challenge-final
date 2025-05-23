@@ -19,12 +19,16 @@ SOC_TO_SHORT_SOC_MAP = {
     "ascend910premiuma": "ascend910",
     "ascend910b1": "ascend910b",
     "ascend910b2": "ascend910b",
+    "ascend910b2c": "ascend910b",
     "ascend910b3": "ascend910b",
     "ascend910b4": "ascend910b",
-    "ascend910c1": "ascend910c",
-    "ascend910c2": "ascend910c",
-    "ascend910c3": "ascend910c",
-    "ascend910c4": "ascend910c",
+    "ascend910b4-1": "ascend910b",
+    "ascend910_9391": "ascend910_93",
+    "ascend910_9381": "ascend910_93",
+    "ascend910_9372": "ascend910_93",
+    "ascend910_9392": "ascend910_93",
+    "ascend910_9382": "ascend910_93",
+    "ascend910_9361": "ascend910_93",
     "ascend310p1": "ascend310p",
     "ascend310p3": "ascend310p",
     "ascend310p3vir01": "ascend310p",
@@ -32,7 +36,21 @@ SOC_TO_SHORT_SOC_MAP = {
     "ascend310p3vir04": "ascend310p",
     "ascend310p3vir08": "ascend310p",
     "ascend310b1": "ascend310b",
-    "bs9sx1aa": "bs9sx1a"
+    "bs9sx1aa": "bs9sx1a",
+    "ascend610lite": "ascend610lite"
+}
+CONFLICT_KEYWORDS = {
+    "and", "as", "assert", "break", "class", "continue", "def", "del", "elif", "else",
+    "except", "finally", "for", "from", "global", "if", "import", "in", "is", "lambda",
+    "not", "or", "pass", "raise", "return", "try", "while", "with", "yield", "False",
+    "None", "True", "nonlocal", "arg", "__inputs__", "__outputs__", "options", "bisheng",
+    "bisheng_path", "tikcpp_path", "impl_mode", "custom_compile_options",
+    "custom_all_compile_options", "soc_version", "soc_short", "custom_compile_options_soc",
+    "custom_all_compile_options_soc", "origin_func_name", "ascendc_src_dir_ex",
+    "ascendc_src_dir", "ascendc_src_file", "src", "op_type", "code_channel", "op_info",
+    "compile_op", "get_code_channel", "result", "__attrs__", "isinstance", "attr",
+    "get_current_build_config", "_build_args", "get_dtype_fmt_options", "shutil", "os",
+    "get_kernel_source"
 }
 
 
@@ -42,13 +60,26 @@ class OpDesc:
         self.attr_list = []
         self.attr_val = {}
         self.input_name = []
+        self.input_ori_name = []
         self.input_type = []
         self.input_dtype = []
+        self.input_dtype_for_bin_list = []
+        self.input_dtype_for_bin = {}
         self.input_fmt = []
+        self.input_fmt_for_bin_list = []
+        self.input_fmt_for_bin = {}
+        self.input_virt = {}
         self.output_name = []
+        self.output_ori_name = []
         self.output_type = []
         self.output_dtype = []
+        self.output_dtype_for_bin_list = []
+        self.output_dtype_for_bin = {}
         self.output_fmt = []
+        self.output_fmt_for_bin_list = []
+        self.output_fmt_for_bin = {}
+        self.output_init_value = []
+        self.output_shape_depend_on_compute = []
         self.op_fmt_sel = False
         self.op_chk_support = False
         self.op_intf = ''
@@ -64,6 +95,11 @@ class OpDesc:
         self.op_range_limit = ''
         self.custom_compile_options = {}
         self.custom_all_compile_options = {}
+        self.param_type_dynamic = False
+        self.mc2_ctx = []
+        self.bin_cprs_list = []
+        self.bin_cprs_head = []
+        self.bin_save_list = []
 
     @staticmethod
     def _parse_digit(conf: str) -> int:
@@ -86,26 +122,52 @@ class OpDesc:
     def parse_input(self: any, conf: str):
         if conf.startswith('input{}.name'.format(int(self.input_idx) + 1)):
             self.input_idx += 1
-            self.input_name.append(self._parse_str(conf))
+            self.input_ori_name.append(self._parse_str(conf))
+            self.input_name.append(self.input_ori_name[-1] + '_in__')
         elif conf.startswith('input{}.paramType'.format(int(self.input_idx))):
-            self.input_type.append(self._parse_str(conf))
+            param_type = self._parse_str(conf)
+            self.input_type.append(param_type)
+            if param_type == "dynamic":
+                self.param_type_dynamic = True
         elif conf.startswith('input{}.dtype'.format(int(self.input_idx))):
             self.input_dtype.append(self._parse_str(conf))
+        elif conf.startswith('input{}.for_bin_dtype'.format(int(self.input_idx))):
+            self.input_dtype_for_bin.update({self.input_idx : self._parse_str(conf)})
         elif conf.startswith('input{}.format'.format(int(self.input_idx))):
             self.input_fmt.append(self._parse_str(conf))
+        elif conf.startswith('input{}.for_bin_format'.format(int(self.input_idx))):
+            self.input_fmt_for_bin.update({self.input_idx : self._parse_str(conf)})
+        elif conf.startswith('input{}.virtual'.format(int(self.input_idx))):
+            self.input_virt[self.input_idx] = self._parse_str(conf)
+        elif conf.startswith('input{}.initValue'.format(int(self.input_idx))):
+            raise Exception(f'[ERROR]: Op: {{\'{self.op_type}\'}} input {self.input_ori_name[int(self.input_idx)]}\
+ has InitValue, which is not support!')
         else:
             return
 
     def parse_output(self: any, conf: str):
         if conf.startswith('output{}.name'.format(int(self.output_idx) + 1)):
             self.output_idx += 1
-            self.output_name.append(self._parse_str(conf))
+            self.output_ori_name.append(self._parse_str(conf))
+            self.output_name.append(self.output_ori_name[-1] + '_out_')
+            self.output_init_value.append(None)
         elif conf.startswith('output{}.paramType'.format(int(self.output_idx))):
-            self.output_type.append(self._parse_str(conf))
+            param_type = self._parse_str(conf)
+            self.output_type.append(param_type)
+            if param_type == "dynamic":
+                self.param_type_dynamic = True
         elif conf.startswith('output{}.dtype'.format(int(self.output_idx))):
             self.output_dtype.append(self._parse_str(conf))
+        elif conf.startswith('output{}.for_bin_dtype'.format(int(self.output_idx))):
+            self.output_dtype_for_bin.update({self.output_idx : self._parse_str(conf)})
         elif conf.startswith('output{}.format'.format(int(self.output_idx))):
             self.output_fmt.append(self._parse_str(conf))
+        elif conf.startswith('output{}.for_bin_format'.format(int(self.output_idx))):
+            self.output_fmt_for_bin.update({self.output_idx : self._parse_str(conf)})
+        elif conf.startswith('output{}.initValue'.format(int(self.output_idx))):
+            self.output_init_value[int(self.output_idx)] = self._parse_str(conf)
+        elif conf.startswith('output{}.outputShapeDependOnCompute=true'.format(int(self.output_idx))):
+            self.output_shape_depend_on_compute.append(int(self.output_idx))
         else:
             return
 
@@ -132,13 +194,32 @@ class OpDesc:
 
     def parse_attr_list(self: any, conf: str):
         self.attr_list = self._parse_list(conf)
+        intersection_element = set(self.attr_list) & CONFLICT_KEYWORDS
+        if intersection_element:
+            raise Exception(f'[ERROR]: The attribute name: {intersection_element} in op: {{\'{self.op_type}\'}} \
+conflicts with the built-in variable name. Use a complex name or prefix the operator name.')
+
+    def parse_mc2_ctx(self: any, conf: str):
+        self.mc2_ctx = self._parse_list(conf)
+
+    @staticmethod
+    def _camel_to_snake(camel_case_str: str):
+        snake_case_str = ''
+        for i, c in enumerate(camel_case_str):
+            if i == 0:
+                snake_case_str += c.lower()
+            elif c.isupper():
+                snake_case_str += '_' + c.lower()
+            else:
+                snake_case_str += c
+        return snake_case_str
 
     def parse_attr_val(self: any, conf: str):
         for attr in self.attr_list:
             if self.attr_val.get(attr) is None:
                 self.attr_val[attr] = {}
             if conf.startswith('attr_{}.type'.format(attr)):
-                self.attr_val.get(attr)['type'] = self._parse_str(conf)
+                self.attr_val.get(attr)['type'] = self._camel_to_snake(self._parse_str(conf))
             elif conf.startswith('attr_{}.paramType'.format(attr)):
                 self.attr_val.get(attr)['paramType'] = self._parse_str(conf)
             elif conf.startswith('attr_{}.defaultValue'.format(attr)):
@@ -169,14 +250,14 @@ def _set_options_to_opdesc(op_descs, op_type, soc_ver_compile_options):
     for op in op_descs:
         if op.op_type != op_type:
             continue
-        op.custom_compile_options = soc_ver_compile_options
+        op.custom_compile_options.update(soc_ver_compile_options)
 
 
 def _trans_soc_ver_to_short(soc_ver: str):
     low_soc_ver = soc_ver.lower()
     if low_soc_ver not in SOC_TO_SHORT_SOC_MAP:
         print(f'WARNING: caution: {soc_ver} will trans into ascend910, if not your intention,'
-              f'use ascend910b1~4 instead')
+            f'use ascend910b1~4 instead')
     return SOC_TO_SHORT_SOC_MAP[low_soc_ver]
 
 
@@ -197,7 +278,6 @@ def _get_op_custom_options(op_descs: list, auto_gen_dir: str):
             if op_type.upper() == 'ALL':
                 op_type = OP_ALL
             if op_type != OP_ALL and _is_op_type_in_opdesc(op_descs, op_type) == False:
-                print(f'WARNING: op: {op_type} are not exists in this project')
                 continue
             soc_ver_compile_options = {}
             soc_ver = param_list[1]
@@ -234,7 +314,7 @@ def get_op_desc(file: str, batch_list: list, iterator_list: list, builder: any,
                 else:
                     op_match = False
                     if op_type is not None and len(op_descs) == len(op_type):
-                        return op_descs
+                        break
                 continue
             if not op_match:
                 continue
@@ -256,6 +336,8 @@ def get_op_desc(file: str, batch_list: list, iterator_list: list, builder: any,
                 op_desc.parse_op_file(line)
             elif line.startswith('dynamicShapeSupport.flag'):
                 op_desc.parse_dynamic_shape(line)
+            elif line.startswith('mc2.ctx'):
+                op_desc.parse_mc2_ctx(line)
             elif line.startswith('attr.list'):
                 op_desc.parse_attr_list(line)
             elif line.startswith('attr_'):

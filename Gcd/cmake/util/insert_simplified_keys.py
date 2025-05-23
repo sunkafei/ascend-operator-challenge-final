@@ -5,11 +5,13 @@ Created on Feb  28 20:56:45 2020
 Copyright (c) Huawei Technologies Co., Ltd. 2020-2021. All rights reserved.
 """
 
+import sys
 import os
 import re
 import glob
 import json
 import argparse
+import const_var
 
 
 DATA_TPYE_DICT = {
@@ -25,6 +27,9 @@ DATA_TPYE_DICT = {
     'uint64': 10,
     'bool': 12,
     'double': 11,
+    'string': 13,
+    'dual': 14,
+    'dual': 15,
     'complex64': 16,
     'complex128': 17,
     'qint8': 18,

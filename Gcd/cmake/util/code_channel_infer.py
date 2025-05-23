@@ -28,7 +28,7 @@ def _is_v220(op_product: str):
     Returns:
         res: True means V220
     """
-    if op_product in ["ascend910b", "ascend910c"]:
+    if op_product == "ascend910_93" or op_product == "ascend910b":
         return True
     return False
 
@@ -45,7 +45,7 @@ def infer_code_channel(params: InfoCodeChanelParams):
         src_file (str): AscendC operator tiling header file
         kernel_name (str): kernel function name
         optype (str): operator type
-        compile_options (list): compile options for ccec cmd
+        compile_options (list): compile options for bisheng cmd
 
     Raises:
         Exception: if not exist L1/L0/UB if code, it's not a aicore code

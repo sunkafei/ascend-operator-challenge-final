@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# coding=utf-8
+# -*- coding: UTF-8 -*-
 """
 Function:
 The replay funtion entry
@@ -64,10 +64,14 @@ def gen_tiling(tiling_header_file: str, tiling_file_out: str):
                 tiling_source += '#else\n'
                 tiling_source += 'inline void Init{stru}(uint8_t* tiling, {stru}* const_data)\n'.format(stru=struct_def)
                 tiling_source += '{\n'
-                tiling_source += '    memcpy(const_data, tiling, sizeof({}));\n'.format(struct_def)
+                tiling_source += '    uint64_t *src = (uint64_t *)tiling;\n'
+                tiling_source += '    uint64_t *dst = (uint64_t *)const_data;\n'
+                tiling_source += '    for (auto i = 0; i < sizeof({}) / 8; i++) *(dst + i) = *(src + i);\n'\
+                    .format(struct_def)
                 tiling_source += '}\n'
                 tiling_source += '#endif\n\n'
                 end_source = '''
+#undef GET_TILING_DATA
 #define GET_TILING_DATA(tiling_data, tiling_arg) \\
 {stru} tiling_data; \\
 Init{stru}(tiling_arg, &tiling_data)\n
