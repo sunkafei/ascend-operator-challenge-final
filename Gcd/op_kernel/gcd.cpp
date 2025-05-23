@@ -89,9 +89,6 @@ template<typename T> class GCDKernalFast {
                 }
                 else if (b == 0) {
                     yGm.SetValue(i, a);
-                }else if((a | b) <= 64){
-                    a = 64 - ScalarCountLeadingZero(pre[a] & pre[b]);
-                    break;
                 }
                 else {
                     T shift = ScalarGetSFFValue<1>(a | b);
