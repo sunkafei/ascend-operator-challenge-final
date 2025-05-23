@@ -8,17 +8,18 @@ namespace optiling {
 static ge::graphStatus TilingFunc(gert::TilingContext* context) {
     GcdTilingData tiling;
     const gert::StorageShape* x1_shape = context->GetInputShape(0);
-    int32_t dim = x1_shape->GetStorageShape().GetDimNum();
+    auto dim1 = x1_shape->GetStorageShape().GetDimNum();
     uint32_t n1[5] = {1, 1, 1, 1, 1};
-    for (int i = 0; i < dim; ++i) {
+    for (int i = 0; i < dim1; ++i) {
         n1[i] = x1_shape->GetStorageShape().GetDim(i);
     }
     const gert::StorageShape* x2_shape = context->GetInputShape(1);
-    dim = x2_shape->GetStorageShape().GetDimNum();
+    auto dim2 = x2_shape->GetStorageShape().GetDimNum();
     uint32_t n2[5] = {1, 1, 1, 1, 1};
-    for (int i = 0; i < dim; ++i) {
-        n2[i] = x2_shape->GetStorageShape().GetDim(i);
+    for (int i = 0; i < dim2; ++i) {
+        n2[i + (dim1 - dim2)] = x2_shape->GetStorageShape().GetDim(i);
     }
+    int dim = std::max(dim1, dim2);
     uint32_t ny[5] = {1, 1, 1, 1, 1};
     for (int i = 0; i < dim; ++i) {
         ny[i] = std::max(n1[i], n2[i]);

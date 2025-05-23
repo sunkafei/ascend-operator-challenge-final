@@ -17,8 +17,8 @@ case_data = {
         'x2':np.random.randint(-100, 100, [1]).astype(np.int16)
     },
     'case3': {
-        'x1':np.random.randint(-100, 100, [4, 4]).astype(np.int16),
-        'x2':np.random.randint(-100, 100, [4, 1]).astype(np.int16)
+        'x1':np.random.randint(-100, 100, [77, 31, 9]).astype(np.int16),
+        'x2':np.random.randint(-100, 100, [9]).astype(np.int16)
     },
     'case5': {
         'x1':np.random.randint(-1e9, 1e9, [32, 64, 2, 2, 2]).astype(np.int32),
