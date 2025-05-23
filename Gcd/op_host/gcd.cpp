@@ -13,7 +13,7 @@ static ge::graphStatus TilingFunc(gert::TilingContext* context) {
     for (int i = 0; i < dim; ++i) {
         n1[i] = x1_shape->GetStorageShape().GetDim(i);
     }
-    const gert::StorageShape* x2_shape = context->GetInputShape(0);
+    const gert::StorageShape* x2_shape = context->GetInputShape(1);
     dim = x2_shape->GetStorageShape().GetDimNum();
     uint32_t n2[5] = {1, 1, 1, 1, 1};
     for (int i = 0; i < dim; ++i) {
