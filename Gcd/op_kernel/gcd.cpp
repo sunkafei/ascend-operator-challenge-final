@@ -80,10 +80,10 @@ template<typename T> class GCDKernalFast {
             pipe.InitBuffer(Q_x2, BUFFER_NUM, tile_length * sizeof(T));
             pipe.InitBuffer(Q_y, BUFFER_NUM, tile_length * sizeof(T));
             pipe.InitBuffer(B_tmp, tile_length * sizeof(T));
-            //pipe.InitBuffer(B_zero, tile_length * sizeof(T));
+            pipe.InitBuffer(B_zero, tile_length * sizeof(T));
             pipe.InitBuffer(B_bits, tile_length * sizeof(uint8_t));
-            //zero = B_zero.Get<T>();
-            //Duplicate(zero, T(0), tile_length);
+            zero = B_zero.Get<T>();
+            Duplicate(zero, T(0), tile_length);
         }
         __aicore__ inline void CopyIn(int32_t pos) {
             LocalTensor<T> x1 = Q_x1.AllocTensor<T>();
@@ -106,43 +106,43 @@ template<typename T> class GCDKernalFast {
             }
         }
         __aicore__ inline void Compute(int32_t pos) {
-            LocalTensor<T> x1 = Q_x1.DeQue<T>();
-            LocalTensor<T> x2 = Q_x2.DeQue<T>();
+            LocalTensor<T> a = Q_x1.DeQue<T>();
+            LocalTensor<T> b = Q_x2.DeQue<T>();
             LocalTensor<T> y = Q_y.AllocTensor<T>();
-            for (int i = 0; i < tile_length; ++i) {
-                T a = x1.GetValue(i);
-                T b = x2.GetValue(i);
-                while (b) {
-                    // T A = b;
-                    // T B = a % b;
-                    // a = A;
-                    // b = B;
-                    a = a % b;
-                    a ^= b ^= a ^= b;
-                }
-                y.SetValue(i, a > 0 ? a : -a);
-            }
-            // auto tmp = B_tmp.Get<T>();
-            // auto bits = B_bits.Get<uint8_t>();
-            // for (int i = 0; i < 64; ++i) {
-            //     Div(tmp, a, b, tile_length);
-            //     Mul(tmp, tmp, b, tile_length);
-            //     Sub(tmp, a, tmp, tile_length);
-
-            //     Compare(bits, tmp, zero, CMPMODE::GT, length);
+            // for (int i = 0; i < tile_length; ++i) {
+            //     T a = x1.GetValue(i);
+            //     T b = x2.GetValue(i);
+            //     while (b) {
+            //         // T A = b;
+            //         // T B = a % b;
+            //         // a = A;
+            //         // b = B;
+            //         a = a % b;
+            //         a ^= b ^= a ^= b;
+            //     }
+            //     y.SetValue(i, a > 0 ? a : -a);
             // }
+            auto tmp = B_tmp.Get<T>();
+            auto bits = B_bits.Get<uint8_t>();
+            for (int i = 0; i < 64; ++i) {
+                // Div(tmp, a, b, tile_length);
+                // Mul(tmp, tmp, b, tile_length);
+                // Sub(tmp, a, tmp, tile_length);
 
-            Q_x1.FreeTensor(x1);
-            Q_x2.FreeTensor(x2);
+                // Compare(bits, tmp, zero, CMPMODE::GT, length);
+            }
+
+            Q_x1.FreeTensor(a);
+            Q_x2.FreeTensor(b);
             Q_y.EnQue<T>(y);
         }
     private:
         TPipe pipe;
-        TBuf<QuePosition::VECCALC> B_bits, B_tmp;//, B_zero;
+        TBuf<QuePosition::VECCALC> B_bits, B_tmp, B_zero;
         TQue<QuePosition::VECIN, BUFFER_NUM> Q_x1, Q_x2;
         TQue<QuePosition::VECOUT, BUFFER_NUM> Q_y;
         GlobalTensor<T> x1Gm, x2Gm, yGm;
-        //LocalTensor<T> zero;
+        LocalTensor<T> zero;
         uint32_t L, R;
 };
 extern "C" __global__ __aicore__ void gcd(GM_ADDR x1, GM_ADDR x2, GM_ADDR y, GM_ADDR workspace, GM_ADDR tiling) {
